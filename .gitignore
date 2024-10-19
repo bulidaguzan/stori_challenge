@@ -23,3 +23,7 @@ go.work.sum
 
 # env file
 .env
+
+
+# Temporal for develop
+upload.sh
