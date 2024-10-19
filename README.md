@@ -14,3 +14,23 @@ In this way we can:
 - Upload it to the ECR repository.
 - Update the lambda from ECR keeping all the control of the code from the repository.
 
+
+## System Design
+The system was designed to be modular and scalable. 
+
+### Backend that rests on the user
+Stack: Python
+Framework: FastApi
+
+- auth: Create and authenticate users.
+- get_summary: Get the account summary request, and generate the order.
+- upload_file: Receive, and upload a txt file to a s3 bucket.
+
+
+### Core Backend
+Stack: Go
+
+- create_summary: Gets the user transactions, formats them and sends them by email.
+- process_file: Gets the file inside the BucketS3, and processes it saving the transactions in DynamoDb
+
+
