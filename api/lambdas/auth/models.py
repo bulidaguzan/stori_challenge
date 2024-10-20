@@ -1,21 +1,18 @@
-# models.py
-from typing import Optional, List
-from datetime import datetime
+# auth_lambda/models.py
+from pydantic import BaseModel
 
 
-class UserBase:
-    print("Creando User base")
+class UserCreate(BaseModel):
     email: str
+    password: str
     name: str
 
 
-class UserCreate(UserBase):
-    print("Creando UserCreate")
-    password: str
-
-
-class User(UserBase):
-    print("Creando User")
+class User(BaseModel):
     id: str
-    created_at: str
-    updated_at: Optional[str] = None
+    email: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
