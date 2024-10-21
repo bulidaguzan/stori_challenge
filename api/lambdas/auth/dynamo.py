@@ -42,13 +42,13 @@ def get_user_by_email(email: str):
         # Use a scan because the index have cost. (not for production)
         print("Getting user... ")
         response = table.scan(FilterExpression=Attr("email").eq(email))
-        # print(f"{response}")
+        print(f"{response}")
         if response["Items"] != []:
             print("User found")
-            return True
+            return response["Items"][0]
         else:
             print("User not found")
-            return False
+            return None
     except ClientError as e:
         logger.error(f"Error fetching user by email: {str(e)}")
         raise
@@ -56,6 +56,8 @@ def get_user_by_email(email: str):
 
 def verify_user(login_request: LoginRequest):
     user = get_user_by_email(login_request.email)
+    print(login_request.password)
+    print(user["password"])
     if user and pwd_context.verify(login_request.password, user["password"]):
         print("User exist and password correct")
         return user
