@@ -35,7 +35,7 @@ async def create_user(user: UserCreate):
         raise
 
 
-def get_user(email: str):
+def get_user_by_email(email: str):
     try:
         # Use a scan because the index have cost. (not for production)
         print("Getting user... ")

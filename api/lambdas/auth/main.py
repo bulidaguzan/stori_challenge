@@ -1,12 +1,14 @@
 from fastapi import FastAPI, HTTPException
 from mangum import Mangum
-from dynamo import create_user, get_user
+from dynamo import create_user, get_user_by_email
 from models import UserCreate, User
 from passlib.apps import custom_app_context as pwd_context
 from fastapi.responses import JSONResponse
 
 
-app = FastAPI()
+app = FastAPI(
+    title="Stori - Auth",
+)
 handler = Mangum(app)
 
 
@@ -21,7 +23,7 @@ async def register(user: UserCreate):
     try:
         print(f"Starting new user...")
         print(f"Checking if user with email {user.email} already exists")
-        existing_user = get_user(user.email)
+        existing_user = get_user_by_email(user.email)
         print(f"Checking user:{existing_user}")
         if existing_user:
             msg = "User already exist"
