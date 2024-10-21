@@ -4,3 +4,4 @@ uvicorn
 mangum
 pydantic
 passlib
+python-jose[cryptography]

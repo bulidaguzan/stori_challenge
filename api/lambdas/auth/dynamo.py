@@ -1,9 +1,11 @@
 import uuid
 import boto3
 from datetime import datetime
-from models import UserCreate, User
+
+from models import UserCreate, User, LoginRequest
 from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Attr
+from passlib.apps import custom_app_context as pwd_context
 
 # Configure dynamodb
 dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
@@ -50,3 +52,12 @@ def get_user_by_email(email: str):
     except ClientError as e:
         logger.error(f"Error fetching user by email: {str(e)}")
         raise
+
+
+def verify_user(login_request: LoginRequest):
+    user = get_user_by_email(login_request.email)
+    if user and pwd_context.verify(login_request.password, user["password"]):
+        print("User exist and password correct")
+        return user
+    print("Error in user or password")
+    return None
