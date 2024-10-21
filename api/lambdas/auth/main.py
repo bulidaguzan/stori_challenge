@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-from dynamo import create_user, get_user_by_email, verify_user
+from dynamo import create_user, get_user_by_email, verify_user, save_token
 
 app = FastAPI(
     title="Stori - Auth",
@@ -66,6 +66,8 @@ async def register(user: UserCreate):
 
 
 # -------------------------- Login  --------------------------
+
+
 def create_access_token(data: dict):
     print("Creating access token...")
     to_encode = data.copy()
@@ -73,8 +75,8 @@ def create_access_token(data: dict):
     print(f"Token expire: {expire}")
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    print("Token create succesfully")
-    return encoded_jwt
+    print("Token create successfully")
+    return encoded_jwt, expire
 
 
 @app.post("/login", tags=["Users"])
@@ -90,27 +92,9 @@ async def login(login_request: LoginRequest):
                 headers={"WWW-Authenticate": "Bearer"},
             )
         print("Creating access token...")
-        access_token = create_access_token(data={"sub": user["email"]})
+        access_token, expire = create_access_token(data={"sub": user["email"]})
+        save_token(user["email"], access_token, expire)
         return {"access_token": access_token, "token_type": "bearer"}
     except Exception as e:
         print(f"Login error: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
-
-
-# @app.get("/users/me", tags=["Users"])
-# async def read_users_me(token: str = Depends(oauth2_scheme)):
-#     try:
-#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-#         email: str = payload.get("sub")
-#         if email is None:
-#             raise HTTPException(
-#                 status_code=401, detail="Invalid authentication credentials"
-#             )
-#         user = get_user_by_email(email)
-#         if user is None:
-#             raise HTTPException(status_code=404, detail="User not found")
-#         return {"email": user["email"], "name": user["name"]}
-#     except JWTError:
-#         raise HTTPException(
-#             status_code=401, detail="Invalid authentication credentials"
-#         )

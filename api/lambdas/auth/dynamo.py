@@ -10,7 +10,7 @@ from passlib.apps import custom_app_context as pwd_context
 # Configure dynamodb
 dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
 table = dynamodb.Table("users")
-
+token_table = dynamodb.Table("tokens")
 
 async def create_user(user: UserCreate):
     print("Creating user...")
@@ -63,3 +63,19 @@ def verify_user(login_request: LoginRequest):
         return user
     print("Error in user or password")
     return None
+
+
+def save_token(email: str, token: str, expiration: datetime):
+    try:
+        token_table.put_item(
+            Item={
+                "email": email,
+                "token": token,
+                "expiration": expiration.isoformat(),
+                "created_at": datetime.utcnow().isoformat(),
+            }
+        )
+        print(f"Token saved successfully for user: {email}")
+    except Exception as e:
+        print(f"Error saving token: {str(e)}")
+        raise
