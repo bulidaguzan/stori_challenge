@@ -36,13 +36,17 @@ async def create_user(user: UserCreate):
 
 
 def get_user(email: str):
-    # Use a scan because the index have cost. (not for production)
-    print("Getting user... ")
-    response = table.scan(FilterExpression=Attr("email").eq(email))
-    # print(f"{response}")
-    if response["Items"] != []:
-        print("User found")
-        return True
-    else:
-        print("User not found")
-        return False
+    try:
+        # Use a scan because the index have cost. (not for production)
+        print("Getting user... ")
+        response = table.scan(FilterExpression=Attr("email").eq(email))
+        # print(f"{response}")
+        if response["Items"] != []:
+            print("User found")
+            return True
+        else:
+            print("User not found")
+            return False
+    except ClientError as e:
+        logger.error(f"Error fetching user by email: {str(e)}")
+        raise
