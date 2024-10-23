@@ -19,6 +19,7 @@ import (
 
 type Transaction struct {
     ID        string    `json:"id"`
+    UserID    string    `json:"userId"`
     Date      time.Time `json:"date"`
     Amount    float64   `json:"amount"`
     Processed string    `json:"processed"`
@@ -75,7 +76,8 @@ func handleRequest(ctx context.Context, s3Event events.S3Event) error {
             
             // Parsear la línea
             parts := strings.Split(line, ",")
-            if len(parts) != 3 {
+            log.Println(len(parts))
+            if len(parts) != 4 {
                 log.Printf("ERROR: Invalid line format at line %d: %s (expected 3 parts, got %d)", lineCount, line, len(parts))
                 errorCount++
                 continue
@@ -84,7 +86,11 @@ func handleRequest(ctx context.Context, s3Event events.S3Event) error {
 
             // Crear estructura de transacción
             log.Printf("Parsing amount from string: %s", parts[2])
-            amount, err := strconv.ParseFloat(parts[2], 64)
+            // Id
+            // UserId
+            // Date
+            //Amount
+            amount, err := strconv.ParseFloat(parts[3], 64)
             if err != nil {
                 log.Printf("ERROR: Failed to parse amount at line %d: %v", lineCount, err)
                 errorCount++
@@ -93,7 +99,7 @@ func handleRequest(ctx context.Context, s3Event events.S3Event) error {
             log.Printf("Amount parsed successfully: %f", amount)
 
             log.Printf("Parsing date from string: %s", parts[1])
-            date, err := time.Parse("2006-01-02", parts[1])
+            date, err := time.Parse("2006-01-02", parts[2])
             if err != nil {
                 log.Printf("ERROR: Failed to parse date at line %d: %v", lineCount, err)
                 errorCount++
@@ -102,11 +108,12 @@ func handleRequest(ctx context.Context, s3Event events.S3Event) error {
             log.Printf("Date parsed successfully: %v", date)
 
             transaction := Transaction{
-                ID:        parts[0],
-                Date:      date,
-                Amount:    amount,
-                Processed: "Ok",
-            }
+            ID:        parts[0],
+            UserID:    parts[1],
+            Date:      date,
+            Amount:    amount,
+            Processed: "Ok",
+        }
             log.Printf("Created transaction object: %+v", transaction)
 
             tableName := "movements"
@@ -114,13 +121,14 @@ func handleRequest(ctx context.Context, s3Event events.S3Event) error {
             
             // Guardar en DynamoDB
             _, err = dynamoClient.PutItem(ctx, &dynamodb.PutItemInput{
-                TableName: &tableName,
+            TableName: &tableName,
                 Item: map[string]types.AttributeValue{
                     "id":        &types.AttributeValueMemberS{Value: transaction.ID},
-                    "date":      &types.AttributeValueMemberS{Value: transaction.Date.Format("2006-01-02")},
+                    "UserId":    &types.AttributeValueMemberS{Value: transaction.UserID}, // Agregado UserId
+                    "Date":      &types.AttributeValueMemberS{Value: transaction.Date.Format("2006-01-02")},
                     "amount":    &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", transaction.Amount)},
                     "processed": &types.AttributeValueMemberS{Value: transaction.Processed},
-                },
+            },
             })
             if err != nil {
                 log.Printf("ERROR: Failed to save transaction %s to DynamoDB: %v", transaction.ID, err)
