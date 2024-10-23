@@ -1,16 +1,14 @@
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
+
+print("llego")
 
 
 def init_lambda():
-    # Inicializar la aplicación
-    app = create_app()
-    handler = Mangum(app)
-
     # Log de inicio
     logger.info("FastAPI application initialized with the following routes:")
     for route in app.routes:
         logger.info(f"Route: {route.path} [{','.join(route.methods)}]")
-
+    app = FastAPI()
     app.include_router(
         admin.router,
         prefix="/login",
@@ -26,3 +24,14 @@ def init_lambda():
         prefix="/upload",
         tags=["Transaction"],
     )
+    # Log de rutas
+    logger.info("FastAPI application initialized with the following routes:")
+    for route in app.routes:
+        logger.info(f"Route: {route.path} [{','.join(route.methods)}]")
+
+    return app
+
+
+print("Llego")
+app = init_lambda()
+handler = Mangum(app)

@@ -14,6 +14,13 @@ In this way we can:
 - Upload it to the ECR repository.
 - Update the lambda from ECR keeping all the control of the code from the repository.
 
+To update:
+
+sh upload.sh fastapi lambda_fastapi app
+
+
+sh upload.sh process_file lambda_process_file core
+
 
 ## System Design
 The system was designed to be modular and scalable. 

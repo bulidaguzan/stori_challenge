@@ -1,4 +1,4 @@
-FROM public.ecr.aws/lambda/python:3.9
+FROM python:3.9-slim
 
 # Copy requirements.txt
 COPY requirements.txt ${LAMBDA_TASK_ROOT}
@@ -10,4 +10,4 @@ RUN pip install -r requirements.txt
 COPY * ${LAMBDA_TASK_ROOT}
 
 # Set the CMD to your handler.
-CMD [ "main.lambda_handler" ]
+CMD [ "main.handler" ]

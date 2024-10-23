@@ -7,4 +7,4 @@ docker build -t stori_process_file .
 docker tag lambda_process_file:latest 314146307016.dkr.ecr.us-east-1.amazonaws.com/stori_challenge:lambda_process_file
 
 # Push
-docker push 314146307016.dkr.ecr.us-east-1.amazonaws.com/stori_challenge:lambda_process_file
+docker push 314146307016.dkr.ecr.us-east-1.amazonaws.com/stori_challenge:lambda_process_fileq
