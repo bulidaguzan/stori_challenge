@@ -1,7 +1,0 @@
-fastapi
-pydantic
-uvicorn
-mangum
-pydantic
-passlib
-python-jose[cryptography]
