@@ -1,6 +1,8 @@
-fastapi
+boto3==1.35.44
+fastapi==0.115.2
+uvicorn==0.32.0
 mangum
 python-jose[cryptography]
-boto3
 passlib
 dynamo
+python-multipart
