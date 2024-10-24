@@ -30,7 +30,7 @@ Stack: Python
 Framework: FastApi
 
 - auth: Create and authenticate users.
-- get_summary: Get the account summary request, and generate the order.
+- get_summary: Get the account summary request, and generate a email report
 - upload_file: Receive, and upload a txt file to a s3 bucket.
 
 

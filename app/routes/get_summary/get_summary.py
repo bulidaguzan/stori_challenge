@@ -163,13 +163,6 @@ def send_summary_email(email: str, summary: dict):
     subject = "Your Monthly Transaction Summary"
 
     # Read the logo image file and encode it
-    try:
-        with open("stori.jpeg", "rb") as f:
-            logo_data = f.read()
-            logo_base64 = base64.b64encode(logo_data).decode()
-    except Exception as e:
-        logger.error(f"💥 Error reading logo file: {str(e)}")
-        logo_base64 = ""
 
     body_html = f"""
     <html>
@@ -250,7 +243,7 @@ def send_summary_email(email: str, summary: dict):
         <body>
             <div class="container">
                 <div class="header">
-                    <img src="data:image/jpeg;base64,{logo_base64}" alt="Stori Logo" class="logo">
+                    <img src="https://es.m.wikipedia.org/wiki/Archivo:Stori_Logo_2023.svg" alt="Stori Logo" class="logo">
                     <h1>Transaction Summary</h1>
                     <p>Last 30 Days Activity</p>
                 </div>

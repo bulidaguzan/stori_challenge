@@ -18,9 +18,9 @@ logger.setLevel(logging.INFO)
 
 
 async def create_user(user: UserCreate):
-    print("Creating user...")
+    logger.info("🔐 Starting user creation process...")
     try:
-        print("Saving user...")
+        logger.info("💾 Attempting to save new user to database...")
         timestamp = datetime.utcnow().isoformat()
         user_dict = {
             "id": str(uuid.uuid4()),
@@ -34,44 +34,59 @@ async def create_user(user: UserCreate):
         table.put_item(
             Item=user_dict, ConditionExpression="attribute_not_exists(email)"
         )
-        print("Save succesfull ")
+        logger.info(f"✅ User successfully created with email: {user.email}")
 
     except ClientError as e:
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+            logger.warning(f"⚠️ Registration failed: Email {user.email} already exists")
             raise ValueError("Email already exists")
+        logger.error(f"❌ Database error during user creation: {str(e)}")
         raise
 
 
 def get_user_by_email(email: str):
     try:
+        logger.info(f"🔍 Searching for user with email: {email}")
         # Use a scan because the index have cost. (not for production)
-        print("Getting user... ")
         response = table.scan(FilterExpression=Attr("email").eq(email))
-        print(f"{response}")
-        if response["Items"] != []:
-            print("User found")
+        logger.debug(f"📊 Database response: {response}")
+
+        if response["Items"]:
+            logger.info(f"✅ User found: {email}")
             return response["Items"][0]
         else:
-            print("User not found")
+            logger.warning(f"⚠️ No user found with email: {email}")
             return None
+
     except ClientError as e:
-        logger.error(f"Error fetching user by email: {str(e)}")
+        logger.error(f"❌ Database error while fetching user: {str(e)}")
         raise
 
 
 def verify_user(login_request: LoginRequest):
+    logger.info(f"🔐 Attempting to verify user: {login_request.email}")
     user = get_user_by_email(login_request.email)
-    print(login_request.password)
-    print(user["password"])
-    if user and pwd_context.verify(login_request.password, user["password"]):
-        print("User exist and password correct")
+
+    if not user:
+        logger.warning(
+            f"⚠️ Authentication failed: User not found - {login_request.email}"
+        )
+        return None
+
+    logger.debug("🔑 Verifying password hash...")
+    if pwd_context.verify(login_request.password, user["password"]):
+        logger.info(f"✅ User successfully authenticated: {login_request.email}")
         return user
-    print("Error in user or password")
+
+    logger.warning(
+        f"⚠️ Authentication failed: Invalid password for user {login_request.email}"
+    )
     return None
 
 
 def save_token(email: str, token: str, expiration: datetime):
     try:
+        logger.info(f"🎟️ Saving authentication token for user: {email}")
         token_table.put_item(
             Item={
                 "email": email,
@@ -80,7 +95,10 @@ def save_token(email: str, token: str, expiration: datetime):
                 "created_at": datetime.utcnow().isoformat(),
             }
         )
-        print(f"Token saved successfully for user: {email}")
+        logger.info(f"✅ Token successfully saved for user: {email}")
+        logger.debug(f"📅 Token expiration set to: {expiration.isoformat()}")
+
     except Exception as e:
-        print(f"Error saving token: {str(e)}")
+        logger.error(f"❌ Failed to save authentication token: {str(e)}")
         raise
+
