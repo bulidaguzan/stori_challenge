@@ -11,6 +11,11 @@ from passlib.apps import custom_app_context as pwd_context
 dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
 table = dynamodb.Table("users")
 token_table = dynamodb.Table("tokens")
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 
 async def create_user(user: UserCreate):
     print("Creating user...")

@@ -4,8 +4,10 @@ from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from .dynamo import verify_user, save_token
+import logging
 
-
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 from fastapi import APIRouter
 
 router = APIRouter()
@@ -46,7 +48,8 @@ async def login(login_request: LoginRequest):
         print("Creating access token...")
         access_token, expire = create_access_token(data={"sub": user["email"]})
         save_token(user["email"], access_token, expire)
-        return {"access_token": access_token, "token_type": "bearer"}
+        return {"access_token": str(access_token), "token_type": "bearer"}
+
     except Exception as e:
         print(f"Login error: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")

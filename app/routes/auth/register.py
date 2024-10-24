@@ -5,7 +5,10 @@ from fastapi.responses import JSONResponse
 from .dynamo import create_user, get_user_by_email
 
 from fastapi import APIRouter
+import logging
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 router = APIRouter()
 
 
