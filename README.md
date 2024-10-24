@@ -5,6 +5,8 @@ A comprehensive system for managing user transactions and generating account sum
 
 ## System Architecture
 
+URL SOLUTION: https://qyaayv7l7pu7s5y4u7wlbs4dxy0dmmmu.lambda-url.us-east-1.on.aws/docs
+
 ![alt text](arq.png)
 
 ### Backend Services
