@@ -51,6 +51,27 @@ def verify_token(token: str) -> dict:
         return None
 
 
+def get_user_id_from_email(email: str) -> str:
+    """
+    Get UserId from account table using email
+    """
+    try:
+        logger.info(f"🔍 Looking up UserId for email: {email}")
+        response = users_table.scan(FilterExpression=Attr("email").eq(email))
+
+        if not response["Items"]:
+            logger.warning(f"❌ No account found for email: {email}")
+            raise HTTPException(status_code=404, detail="Account not found")
+
+        user_id = response["Items"][0]["id"]
+        logger.info(f"✅ Found UserId: {user_id}")
+        return user_id
+
+    except Exception as e:
+        logger.error(f"💥 Error retrieving UserId: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error retrieving user account")
+
+
 def get_user_transactions(user_id: str) -> list:
     logger.info(f"📊 Retrieving transactions for user: {user_id}")
     end_date = datetime.now()
@@ -60,12 +81,7 @@ def get_user_transactions(user_id: str) -> list:
         logger.info(
             f"🗓️ Date range: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}"
         )
-        response = movements_table.scan(
-            FilterExpression=Attr("UserId").eq(user_id)
-            & Attr("Date").between(
-                start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d")
-            )
-        )
+        response = movements_table.scan(FilterExpression=Attr("UserId").eq(user_id))
         logger.info(f"📝 Found {len(response['Items'])} transactions")
         return response["Items"]
     except Exception as e:
@@ -174,9 +190,13 @@ async def get_summary(request: SummaryRequest):
         user_email = token_data["email"]
         logger.info(f"👤 Processing request for user: {user_email}")
 
-        # Get user's transactions
+        # Get UserId from account table using email
+        logger.info("🔍 Getting UserId from account...")
+        user_id = get_user_id_from_email(user_email)
+
+        # Get user's transactions using UserId
         logger.info("📊 Retrieving transactions...")
-        transactions = get_user_transactions(user_email)
+        transactions = get_user_transactions(user_id)
 
         # Calculate summary
         logger.info("📋 Generating summary...")
