@@ -27,10 +27,11 @@ async def register(user: UserCreate):
 
         logger.info("💾 Saving user to database...")
         user.password = hashed_password
-        await create_user(user)
+        user_dict = await create_user(user)
 
         logger.info("✅ User registration successful")
         return {
+            "id": user_dict["id"],
             "email": user.email,
             "password": "Save into database, and encrypt for your security.",
             "name": user.name,

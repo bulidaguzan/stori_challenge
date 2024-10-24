@@ -35,6 +35,7 @@ async def create_user(user: UserCreate):
             Item=user_dict, ConditionExpression="attribute_not_exists(email)"
         )
         logger.info(f"✅ User successfully created with email: {user.email}")
+        return user_dict
 
     except ClientError as e:
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
@@ -101,4 +102,3 @@ def save_token(email: str, token: str, expiration: datetime):
     except Exception as e:
         logger.error(f"❌ Failed to save authentication token: {str(e)}")
         raise
-
