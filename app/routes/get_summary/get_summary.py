@@ -81,9 +81,22 @@ def get_user_transactions(user_id: str) -> list:
         logger.info(
             f"🗓️ Date range: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}"
         )
-        response = movements_table.scan(FilterExpression=Attr("UserId").eq(user_id))
-        logger.info(f"📝 Found {len(response['Items'])} transactions")
-        return response["Items"]
+        response = movements_table.scan(
+            FilterExpression=Attr("UserId").eq(user_id)
+            & Attr("Date").between(
+                start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d")
+            )
+        )
+
+        transactions = response["Items"]
+        logger.info(f"📝 Found {len(transactions)} transactions")
+
+        # Log transaction dates for verification
+        for trans in transactions:
+            logger.info(f"Transaction date: {trans['Date']}, amount: {trans['amount']}")
+
+        return transactions
+
     except Exception as e:
         logger.error(f"💥 Error retrieving transactions: {str(e)}")
         raise HTTPException(status_code=500, detail="Error retrieving transactions")
@@ -98,6 +111,7 @@ def calculate_summary(transactions: list) -> dict:
             "transactions_by_month": {},
             "avg_debit": 0,
             "avg_credit": 0,
+            "transaction_count": 0,  # Added for verification
         }
 
     total_balance = Decimal("0")
@@ -108,6 +122,9 @@ def calculate_summary(transactions: list) -> dict:
     for trans in transactions:
         amount = Decimal(str(trans["amount"]))
         total_balance += amount
+
+        # Log each transaction for verification
+        logger.info(f"Processing transaction: Date={trans['Date']}, Amount={amount}")
 
         date = datetime.strptime(trans["Date"], "%Y-%m-%d")
         month = date.strftime("%B")
@@ -121,36 +138,156 @@ def calculate_summary(transactions: list) -> dict:
     avg_debit = sum(debit_amounts) / len(debit_amounts) if debit_amounts else 0
     avg_credit = sum(credit_amounts) / len(credit_amounts) if credit_amounts else 0
 
+    # Log summary calculations for verification
     logger.info(f"💰 Total balance calculated: {float(total_balance)}")
     logger.info(f"📈 Average credits: {float(avg_credit)}")
     logger.info(f"📉 Average debits: {float(avg_debit)}")
+    logger.info(f"📅 Transactions by month: {transactions_by_month}")
+    logger.info(f"🔢 Number of transactions: {len(transactions)}")
 
     return {
         "total_balance": float(total_balance),
         "transactions_by_month": dict(transactions_by_month),
         "avg_debit": float(avg_debit),
         "avg_credit": float(avg_credit),
+        "transaction_count": len(transactions),  # Added for verification
+        "date_range": {
+            "start": (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d"),
+            "end": datetime.now().strftime("%Y-%m-%d"),
+        },
     }
 
 
 def send_summary_email(email: str, summary: dict):
     logger.info(f"📧 Preparing email for: {email}")
     subject = "Your Monthly Transaction Summary"
+
+    # Read the logo image file and encode it
+    try:
+        with open("stori.jpeg", "rb") as f:
+            logo_data = f.read()
+            logo_base64 = base64.b64encode(logo_data).decode()
+    except Exception as e:
+        logger.error(f"💥 Error reading logo file: {str(e)}")
+        logo_base64 = ""
+
     body_html = f"""
     <html>
+        <head>
+            <style>
+                body {{
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #333333;
+                    margin: 0;
+                    padding: 0;
+                }}
+                .container {{
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }}
+                .header {{
+                    text-align: center;
+                    padding: 20px 0;
+                    background-color: #f8f9fa;
+                }}
+                .logo {{
+                    max-width: 150px;
+                    height: auto;
+                }}
+                .summary-box {{
+                    background-color: #ffffff;
+                    border: 1px solid #e9ecef;
+                    border-radius: 5px;
+                    padding: 20px;
+                    margin: 20px 0;
+                }}
+                .balance {{
+                    font-size: 24px;
+                    color: #2c3e50;
+                    text-align: center;
+                    padding: 15px 0;
+                    margin: 10px 0;
+                    background-color: #f8f9fa;
+                    border-radius: 5px;
+                }}
+                .transactions-list {{
+                    list-style: none;
+                    padding: 0;
+                }}
+                .transaction-item {{
+                    padding: 10px 0;
+                    border-bottom: 1px solid #e9ecef;
+                }}
+                .averages {{
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 20px;
+                }}
+                .average-box {{
+                    flex: 1;
+                    text-align: center;
+                    padding: 15px;
+                    margin: 0 10px;
+                    background-color: #f8f9fa;
+                    border-radius: 5px;
+                }}
+                .debit {{
+                    color: #dc3545;
+                }}
+                .credit {{
+                    color: #28a745;
+                }}
+                .footer {{
+                    text-align: center;
+                    padding: 20px 0;
+                    font-size: 12px;
+                    color: #6c757d;
+                }}
+            </style>
+        </head>
         <body>
-            <h2>Transaction Summary for the Last 30 Days</h2>
-            <p>Here's your financial summary:</p>
-            <ul>
-                <li>Total Balance: ${summary['total_balance']:.2f}</li>
-                <li>Transactions by Month:
-                    <ul>
-                        {"".join([f"<li>{month}: {count}</li>" for month, count in summary['transactions_by_month'].items()])}
+            <div class="container">
+                <div class="header">
+                    <img src="data:image/jpeg;base64,{logo_base64}" alt="Stori Logo" class="logo">
+                    <h1>Transaction Summary</h1>
+                    <p>Last 30 Days Activity</p>
+                </div>
+                
+                <div class="summary-box">
+                    <div class="balance">
+                        <strong>Total Balance</strong>
+                        <br>
+                        ${summary['total_balance']:.2f}
+                    </div>
+                    
+                    <h3>Transactions by Month</h3>
+                    <ul class="transactions-list">
+                        {" ".join([f'''
+                        <li class="transaction-item">
+                            <strong>{month}:</strong> {count} transactions
+                        </li>
+                        ''' for month, count in summary['transactions_by_month'].items()])}
                     </ul>
-                </li>
-                <li>Average Debit Amount: ${summary['avg_debit']:.2f}</li>
-                <li>Average Credit Amount: ${summary['avg_credit']:.2f}</li>
-            </ul>
+                    
+                    <div class="averages">
+                        <div class="average-box">
+                            <h4>Average Debits</h4>
+                            <span class="debit">${abs(summary['avg_debit']):.2f}</span>
+                        </div>
+                        <div class="average-box">
+                            <h4>Average Credits</h4>
+                            <span class="credit">${summary['avg_credit']:.2f}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="footer">
+                    <p>This is an automated message from Stori. Please do not reply to this email.</p>
+                    <p>If you have any questions, please contact our support team.</p>
+                </div>
+            </div>
         </body>
     </html>
     """
