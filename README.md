@@ -130,26 +130,6 @@ The Go Lambda function processes uploaded files with the following steps:
    - Saves validated transactions to DynamoDB
    - Includes processing status and metadata
 
-#### Code Example: Transaction Processing
-```go
-type Transaction struct {
-    ID        string    `json:"id"`
-    UserID    string    `json:"userId"`
-    Date      time.Time `json:"date"`
-    Amount    float64   `json:"amount"`
-    Processed string    `json:"processed"`
-}
-
-
-## Setup and Deployment
-
-### Prerequisites
-- AWS Account with appropriate permissions
-- Docker installed
-- AWS CLI configured
-- Go 1.19+
-- Python 3.9+
-
 ### Environment Variables
 ```bash
 AWS_REGION=us-east-1
