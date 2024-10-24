@@ -23,3 +23,18 @@ go.work.sum
 
 # env file
 .env
+*.DS_Store
+
+
+# Python Testing
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+htmlcov/
