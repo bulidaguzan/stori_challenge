@@ -224,4 +224,4 @@ The Go Lambda function includes comprehensive logging:
 ![alt text](test_result.png)
 
 ### Email reuslt
-![alt text](image.png)
+![alt text](email.png)
