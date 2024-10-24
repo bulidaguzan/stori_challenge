@@ -120,7 +120,7 @@ func handleRequest(ctx context.Context, s3Event events.S3Event) error {
 
             transaction := Transaction{
                 ID:        uniqueID, // Usar el ID único generado
-                UserID:    parts[1],
+                UserID:    parts[0],
                 Date:      date,
                 Amount:    amount,
                 Processed: "Ok",
