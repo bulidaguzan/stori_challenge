@@ -1,8 +1,8 @@
 from fastapi import HTTPException, APIRouter
-from models import UserCreate
+from .models import UserCreate
 from passlib.apps import custom_app_context as pwd_context
 from fastapi.responses import JSONResponse
-from dynamo import create_user, get_user_by_email
+from .dynamo import create_user, get_user_by_email
 
 from fastapi import APIRouter
 

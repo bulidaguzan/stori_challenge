@@ -1,9 +1,9 @@
 from fastapi import HTTPException, APIRouter
-from models import LoginRequest
+from .models import LoginRequest
 from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-from dynamo import verify_user, save_token
+from .dynamo import verify_user, save_token
 
 
 from fastapi import APIRouter

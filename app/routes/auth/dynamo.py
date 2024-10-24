@@ -2,7 +2,7 @@ import uuid
 import boto3
 from datetime import datetime
 
-from models import UserCreate, User, LoginRequest
+from .models import UserCreate, User, LoginRequest
 from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Attr
 from passlib.apps import custom_app_context as pwd_context
